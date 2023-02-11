@@ -4,13 +4,22 @@ import os
 import ipaddress
 import struct
 
-HOST = '10.6.0.219'
+HOST = '10.20.0.224'
 
 protocol_map = { 1: 'ICMP',
                  6 : 'UDP',
                  17: 'TCP'
 
 }
+
+class ICMP():
+    def __init__(self, buff=None):
+        value = struct.unpack('<BBHHHHHHH4s4s', buff)
+        self.ICMP_type = value[0]
+        self.ICMP_code = value[1]
+        self.src = value[9]
+        self.dst = value[10]
+
 
 class IP():
     def __init__(self, buff=None):
@@ -45,13 +54,22 @@ def main():
 
     # Read one packet
 
-    buffer = sniffer.recvfrom(65565)[0][0:20]
-    packet = IP(buffer)
+    buffer = sniffer.recvfrom(65565)
+    ip_data = buffer[0][0:20]
+    packet = IP(ip_data)
     print(f"packet ver--> {packet.ver}")
     print(f"packet ihl--> {packet.inl}")
     print('packet source--> '+'.'.join([f'{c}' for c in packet.src_ip]))
     print('packet destination--> ' + '.'.join([f'{c}' for c in packet.dst_ip]))
     print(f'packet protocol--> {protocol_map[packet.protocol]}')
+
+    if packet.protocol == 1:
+        icmp_packet = ICMP(buffer[0][20:44])
+        print(icmp_packet.ICMP_type)
+        print(icmp_packet.ICMP_code)
+        print('.'.join(f'{c}' for c in icmp_packet.src))
+        print('.'.join(f'{c}' for c in icmp_packet.dst))
+
 
 
 
