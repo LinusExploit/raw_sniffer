@@ -8,7 +8,7 @@ import threading
 import time 
 
 #Subnet to target
-SUBNET = "192.168.1.0"
+SUBNET = "10.20.0.0/16"
 
 #Magic string we will check ICMP response for
 MESSAGE = "PYTHONRULES!"
@@ -55,6 +55,10 @@ class IP():
         self.src_ip = header[8]
         self.dst_ip = header[9]
 
+        #Human readable IP addresses:
+        self.src_iph = ipaddress.ip_address(self.src_ip)
+        self.dst_iph = ipaddress.ip_address(self.dst_ip)
+
 
 class Scanner:
     def __init__(self, host):
@@ -86,13 +90,13 @@ class Scanner:
                     icmp_header = ICMP(buf)
                     #check for type 3 and code 
                     if icmp_header.code == 3 and icmp_header.type == 3:
-                        if ipaddress.ip_address(ip_header.src_ip) in ipaddress.IPv4Network(SUBNET):
+                        if ipaddress.ip_address(ip_header.src_iph) in ipaddress.IPv4Network(SUBNET):
 
                             #Make sure it has our magic message 
                             if raw_buffer[len(raw_buffer)- len(MESSAGE):] == bytes(MESSAGE, 'utf8'):
-                                tgt = str(ip_header.src_ip)
+                                tgt = str(ip_header.src_iph)
                                 if tgt != self.host and tgt not in hosts_up:
-                                    hosts_up.add(str(ip_header.src_ip))
+                                    hosts_up.add(str(ip_header.src_iph))
                                     print(f'Hosts Up: {tgt}')
 
         #handle CTRL-C
